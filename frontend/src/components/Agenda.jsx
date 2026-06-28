@@ -274,15 +274,25 @@ export default function Agenda({ token, usuario, toast, preselectedPatient, onCl
     try {
       // Step 1: Handle quick register patient
       if (isQuickRegister) {
-        if (!quickPatientName || !quickPatientPhone) {
-          toast('Por favor, informe o Nome e Telefone do paciente.', 'error');
+        if (!quickPatientName || quickPatientName.trim().length < 3 || /^\d+$/.test(quickPatientName.trim())) {
+          toast('Nome inválido. Deve conter pelo menos 3 caracteres e não ser apenas números.', 'error');
+          return;
+        }
+        if (!quickPatientPhone || quickPatientPhone.trim().length < 8) {
+          toast('Telefone inválido. Deve conter pelo menos 8 dígitos.', 'error');
           return;
         }
 
         const ageNum = parseInt(quickPatientAge);
-        if (!isNaN(ageNum) && ageNum < 18 && (!quickPatientResp || quickPatientResp.trim() === '')) {
-          toast('Pacientes menores de 18 anos exigem um responsável registrado.', 'error');
-          return;
+        if (!isNaN(ageNum)) {
+          if (ageNum < 0 || ageNum > 120) {
+            toast('A idade deve ser um número entre 0 e 120.', 'error');
+            return;
+          }
+          if (ageNum < 18 && (!quickPatientResp || quickPatientResp.trim().length < 3 || /^\d+$/.test(quickPatientResp.trim()))) {
+            toast('Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).', 'error');
+            return;
+          }
         }
 
         const patientRes = await fetch('/api/pacientes', {

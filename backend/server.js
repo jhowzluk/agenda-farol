@@ -279,14 +279,22 @@ app.get('/api/pacientes', authenticateToken, requireAdmin, async (req, res) => {
 
 app.post('/api/pacientes', authenticateToken, requireAdmin, async (req, res) => {
   const { nome, telefone, idade, responsavel, observacoes } = req.body;
-  if (!nome || !telefone) {
-    return res.status(400).json({ error: 'Nome e Telefone são obrigatórios.' });
+
+  if (!nome || nome.trim().length < 3 || /^\d+$/.test(nome.trim())) {
+    return res.status(400).json({ error: 'Nome inválido. Deve conter pelo menos 3 caracteres e não ser apenas números.' });
+  }
+  if (!telefone || telefone.trim().length < 8) {
+    return res.status(400).json({ error: 'Telefone inválido. Deve conter pelo menos 8 dígitos.' });
   }
 
-  // RN06: Age restriction check
   const numIdade = parseInt(idade);
-  if (!isNaN(numIdade) && numIdade < 18 && (!responsavel || responsavel.trim() === '')) {
-    return res.status(400).json({ error: 'Para pacientes menores de 18 anos, é obrigatório registrar um responsável.' });
+  if (!isNaN(numIdade)) {
+    if (numIdade < 0 || numIdade > 120) {
+      return res.status(400).json({ error: 'A idade deve ser um número entre 0 e 120.' });
+    }
+    if (numIdade < 18 && (!responsavel || responsavel.trim().length < 3 || /^\d+$/.test(responsavel.trim()))) {
+      return res.status(400).json({ error: 'Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).' });
+    }
   }
 
   try {
@@ -294,7 +302,7 @@ app.post('/api/pacientes', authenticateToken, requireAdmin, async (req, res) => 
       'INSERT INTO pacientes (nome, telefone, idade, responsavel, observacoes) VALUES (?, ?, ?, ?, ?)',
       [nome, telefone, isNaN(numIdade) ? null : numIdade, responsavel || null, observacoes]
     );
-    res.status(201).json({ id: result.id, nome, telefone, idade: numIdade, responsavel, observacoes });
+    res.status(201).json({ id: result.id, nome, telefone, idade: isNaN(numIdade) ? null : numIdade, responsavel, observacoes });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -304,14 +312,21 @@ app.put('/api/pacientes/:id', authenticateToken, requireAdmin, async (req, res) 
   const { nome, telefone, idade, responsavel, observacoes } = req.body;
   const { id } = req.params;
 
-  if (!nome || !telefone) {
-    return res.status(400).json({ error: 'Nome e Telefone são obrigatórios.' });
+  if (!nome || nome.trim().length < 3 || /^\d+$/.test(nome.trim())) {
+    return res.status(400).json({ error: 'Nome inválido. Deve conter pelo menos 3 caracteres e não ser apenas números.' });
+  }
+  if (!telefone || telefone.trim().length < 8) {
+    return res.status(400).json({ error: 'Telefone inválido. Deve conter pelo menos 8 dígitos.' });
   }
 
-  // RN06: Age restriction check
   const numIdade = parseInt(idade);
-  if (!isNaN(numIdade) && numIdade < 18 && (!responsavel || responsavel.trim() === '')) {
-    return res.status(400).json({ error: 'Para pacientes menores de 18 anos, é obrigatório registrar um responsável.' });
+  if (!isNaN(numIdade)) {
+    if (numIdade < 0 || numIdade > 120) {
+      return res.status(400).json({ error: 'A idade deve ser um número entre 0 e 120.' });
+    }
+    if (numIdade < 18 && (!responsavel || responsavel.trim().length < 3 || /^\d+$/.test(responsavel.trim()))) {
+      return res.status(400).json({ error: 'Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).' });
+    }
   }
 
   try {

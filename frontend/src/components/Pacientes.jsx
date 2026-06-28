@@ -79,15 +79,25 @@ export default function Pacientes({ token, toast }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.nome || !formData.telefone) {
-      toast('Preencha pelo menos Nome e Telefone.', 'error');
+    if (!formData.nome || formData.nome.trim().length < 3 || /^\d+$/.test(formData.nome.trim())) {
+      toast('Nome inválido. Deve conter pelo menos 3 caracteres e não ser apenas números.', 'error');
+      return;
+    }
+    if (!formData.telefone || formData.telefone.trim().length < 8) {
+      toast('Telefone inválido. Deve conter pelo menos 8 dígitos.', 'error');
       return;
     }
 
     const ageNum = parseInt(formData.idade);
-    if (!isNaN(ageNum) && ageNum < 18 && (!formData.responsavel || formData.responsavel.trim() === '')) {
-      toast('Para pacientes menores de 18 anos, é obrigatório registrar um responsável.', 'error');
-      return;
+    if (!isNaN(ageNum)) {
+      if (ageNum < 0 || ageNum > 120) {
+        toast('A idade deve ser um número entre 0 e 120.', 'error');
+        return;
+      }
+      if (ageNum < 18 && (!formData.responsavel || formData.responsavel.trim().length < 3 || /^\d+$/.test(formData.responsavel.trim()))) {
+        toast('Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).', 'error');
+        return;
+      }
     }
 
     try {
