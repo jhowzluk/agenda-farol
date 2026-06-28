@@ -581,8 +581,8 @@ export default function Agenda({ token, usuario, toast, preselectedPatient, onCl
                 const blocked = isTimeBlocked(selectedVolId, dateStr, hour);
                 const blockReason = blocked ? getBlockReason(dateStr, hour) : '';
 
-                // 3. Find booked appointment
-                const apt = appointments.find(a => a.data === dateStr && a.hora === hour);
+                // 3. Find booked appointment (excluding cancelled ones to free up the slot)
+                const apt = appointments.find(a => a.data === dateStr && a.hora === hour && a.status !== 'cancelado');
 
                 return (
                   <div key={dIndex} className="calendar-cell">
