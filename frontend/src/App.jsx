@@ -167,7 +167,7 @@ export default function App() {
               fontWeight: 600,
               fontSize: '0.8rem'
             }}>
-              {usuario.tipo === 'admin' ? 'Secretária' : 'Profissional Voluntário'}
+              {usuario.tipo === 'admin' ? 'Administrador' : 'Profissional Voluntário'}
             </span>
           </div>
         </header>

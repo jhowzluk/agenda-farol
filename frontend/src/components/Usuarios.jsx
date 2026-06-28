@@ -254,7 +254,7 @@ export default function Usuarios({ token, usuario, toast }) {
                 <td>{u.email}</td>
                 <td>
                   <span className={`badge ${u.tipo === 'admin' ? 'badge-confirmado' : 'badge-agendado'}`}>
-                    {u.tipo === 'admin' ? 'Secretária (Admin)' : 'Voluntário'}
+                    {u.tipo === 'admin' ? 'Administrador' : 'Voluntário'}
                   </span>
                 </td>
                 <td>{u.limite_diario || 'Sem limite'}</td>
