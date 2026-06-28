@@ -22,7 +22,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize database tables
 initializeDatabase();
 
 // --- AUTHENTICATION MIDDLEWARE ---
@@ -163,7 +162,6 @@ app.put('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) =
 app.delete('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    // Don't let admin delete their own user
     if (parseInt(id) === parseInt(req.user.id)) {
       return res.status(400).json({ error: 'Você não pode excluir o seu próprio usuário.' });
     }
@@ -339,7 +337,6 @@ app.delete('/api/pacientes/:id', authenticateToken, requireAdmin, async (req, re
 app.get('/api/pacientes/:id/historico', authenticateToken, requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    // 1. Appointments history
     const appointments = await dbAll(
       `SELECT a.*, u.nome as voluntario_nome 
        FROM atendimentos a 
@@ -349,7 +346,6 @@ app.get('/api/pacientes/:id/historico', authenticateToken, requireAdmin, async (
       [id]
     );
 
-    // 2. Referrals history
     const referrals = await dbAll(
       `SELECT e.*, uo.nome as origem_nome, ud.nome as destino_nome 
        FROM encaminhamentos e 
@@ -524,7 +520,6 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
 
     // If date/time/volunteer changes, validate conflict & limits again
     if (updateData !== existing.data || updateHora !== existing.hora || updateVolId !== existing.voluntario_id) {
-      // Limit 30 days
       const bookingDate = new Date(`${updateData}T00:00:00`);
       const today = new Date();
       today.setHours(0,0,0,0);
@@ -534,7 +529,6 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
         return res.status(400).json({ error: 'Agendamentos só podem ser realizados com no máximo 30 dias de antecedência.' });
       }
 
-      // Conflict
       const conflict = await dbGet(
         "SELECT id FROM atendimentos WHERE voluntario_id = ? AND data = ? AND hora = ? AND id != ? AND status != 'cancelado'",
         [updateVolId, updateData, updateHora, id]
@@ -543,7 +537,6 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
         return res.status(400).json({ error: 'O voluntário já possui um atendimento agendado para este horário.' });
       }
 
-      // Manual Block
       const manualBlock = await dbGet(
         'SELECT id, motivo FROM bloqueios_horario WHERE voluntario_id = ? AND data = ? AND ? >= hora_inicio AND ? < hora_fim',
         [updateVolId, updateData, updateHora, updateHora]
@@ -552,7 +545,6 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
         return res.status(400).json({ error: `Este horário está bloqueado pelo voluntário. Motivo: ${manualBlock.motivo}` });
       }
 
-      // Limits
       const volunteer = await dbGet('SELECT * FROM usuarios WHERE id = ?', [updateVolId]);
       if (!volunteer) return res.status(404).json({ error: 'Voluntário não encontrado.' });
       if (volunteer.limite_diario !== null) {
@@ -576,13 +568,11 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
       }
     }
 
-    // Trigger cancel time audit for warnings
     if (updateStatus === 'cancelado' && existing.status !== 'cancelado') {
       canceladoEm = new Date().toISOString();
-      pacienteAvisado = 0; // reset warning acknowledged flag
+      pacienteAvisado = 0;
     }
 
-    // Update
     await dbRun(
       'UPDATE atendimentos SET status = ?, data = ?, hora = ?, observacoes = ?, voluntario_id = ?, cancelado_em = ?, paciente_avisado = ? WHERE id = ?',
       [updateStatus, updateData, updateHora, updateObs, updateVolId, canceladoEm, pacienteAvisado, id]
@@ -656,13 +646,11 @@ app.post('/api/encaminhamentos', authenticateToken, requireAdmin, async (req, re
 
   try {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
-    // 1. Log in forwarding table
     await dbRun(
       'INSERT INTO encaminhamentos (paciente_id, voluntario_origem_id, voluntario_destino_id, data_encaminhamento, observacoes) VALUES (?, ?, ?, ?, ?)',
       [paciente_id, voluntario_origem_id, voluntario_destino_id, nowStr, observacoes]
     );
 
-    // 2. Put on the waitlist with notice
     const note = `Encaminhado por voluntário origem. Obs: ${observacoes || ''}`;
     try {
       await dbRun(
@@ -670,7 +658,6 @@ app.post('/api/encaminhamentos', authenticateToken, requireAdmin, async (req, re
         [paciente_id, note, nowStr]
       );
     } catch (e) {
-      // If already on waitlist, just update observations
       await dbRun(
         'UPDATE lista_espera SET observacoes = ? WHERE paciente_id = ?',
         [note, paciente_id]

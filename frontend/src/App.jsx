@@ -14,20 +14,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
 
-  // Toast notification state
   const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success'); // 'success' or 'error'
+  const [toastType, setToastType] = useState('success');
 
-  // Pre-selected patient when converting from waitlist to booking
   const [selectedPatientForBooking, setSelectedPatientForBooking] = useState(null);
 
-  // Toast handler
   const showToast = (message, type = 'success') => {
     setToastMessage(message);
     setToastType(type);
   };
 
-  // Auto-hide toast
   useEffect(() => {
     if (toastMessage) {
       const timer = setTimeout(() => {
@@ -37,7 +33,6 @@ export default function App() {
     }
   }, [toastMessage]);
 
-  // Load session from token on startup
   useEffect(() => {
     const checkSession = async () => {
       if (!token) {
@@ -55,14 +50,12 @@ export default function App() {
         
         if (res.ok) {
           setUsuario(data.usuario);
-          // Set default tab based on user type
           if (data.usuario.tipo === 'voluntario') {
             setActiveTab('agenda');
           } else {
             setActiveTab('dashboard');
           }
         } else {
-          // Token expired or invalid
           handleLogout();
         }
       } catch (err) {
@@ -99,7 +92,6 @@ export default function App() {
     setActiveTab(tab);
   };
 
-  // Convert waitlist patient to appointment
   const handleConvertToAppointment = (patientId, patientName) => {
     setSelectedPatientForBooking({ id: patientId, name: patientName });
     setActiveTab('agenda');
@@ -138,7 +130,6 @@ export default function App() {
     );
   }
 
-  // If not authenticated, render Login
   if (!token || !usuario) {
     return (
       <>
@@ -154,7 +145,6 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Sidebar Navigation */}
       <Sidebar
         usuario={usuario}
         activeTab={activeTab}
@@ -162,7 +152,6 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Panel Viewport */}
       <main className="main-content">
         <header className="header">
           <div className="header-title">
@@ -234,7 +223,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* Floating alert notification toast */}
       {toastMessage && (
         <div className={`toast ${toastType}`}>
           {toastType === 'success' ? '✓' : '⚠️'} {toastMessage}

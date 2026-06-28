@@ -7,7 +7,6 @@ const isLocal = !process.env.DATABASE_URL ||
                 process.env.DATABASE_URL.includes('localhost') || 
                 process.env.DATABASE_URL.includes('127.0.0.1');
 
-// TiDB Cloud / Production databases require SSL
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL || 'mysql://root@localhost:3306/agenda_farol',
   ssl: isLocal ? null : { rejectUnauthorized: false },
@@ -16,7 +15,6 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Run DB queries as Promises (SQLite compatibility layer)
 const dbRun = async (sql, params = []) => {
   if (params.length === 0) {
     const [result] = await pool.query(sql);
@@ -44,10 +42,8 @@ const dbGet = async (sql, params = []) => {
   return rows[0] || null;
 };
 
-// Initialize schema tables (adapted for MySQL / TiDB)
 const initializeDatabase = async () => {
   try {
-    // 1. Usuarios Table
     await dbRun(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,7 +57,6 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // 2. Pacientes Table
     await dbRun(`
       CREATE TABLE IF NOT EXISTS pacientes (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -73,70 +68,65 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // 3. Disponibilidades Table
     await dbRun(`
       CREATE TABLE IF NOT EXISTS disponibilidades (
         id INT AUTO_INCREMENT PRIMARY KEY,
         voluntario_id INT NOT NULL,
         dia_semana INT NOT NULL CHECK(dia_semana BETWEEN 0 AND 6),
-        hora_inicio VARCHAR(10) NOT NULL, -- HH:MM
-        hora_fim VARCHAR(10) NOT NULL, -- HH:MM
+        hora_inicio VARCHAR(10) NOT NULL,
+        hora_fim VARCHAR(10) NOT NULL,
         recorrencia VARCHAR(50) NOT NULL CHECK(recorrencia IN ('semanal', 'quinzenal_impar', 'quinzenal_par', 'mensal')),
         FOREIGN KEY(voluntario_id) REFERENCES usuarios(id) ON DELETE CASCADE
       )
     `);
 
-    // 4. Bloqueios Horario Table
     await dbRun(`
       CREATE TABLE IF NOT EXISTS bloqueios_horario (
         id INT AUTO_INCREMENT PRIMARY KEY,
         voluntario_id INT NOT NULL,
-        data VARCHAR(10) NOT NULL, -- YYYY-MM-DD
-        hora_inicio VARCHAR(10) NOT NULL, -- HH:MM
-        hora_fim VARCHAR(10) NOT NULL, -- HH:MM
+        data VARCHAR(10) NOT NULL,
+        hora_inicio VARCHAR(10) NOT NULL,
+        hora_fim VARCHAR(10) NOT NULL,
         motivo TEXT,
         FOREIGN KEY(voluntario_id) REFERENCES usuarios(id) ON DELETE CASCADE
       )
     `);
 
-    // 5. Atendimentos Table
     await dbRun(`
       CREATE TABLE IF NOT EXISTS atendimentos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         paciente_id INT NOT NULL,
         voluntario_id INT NOT NULL,
-        data VARCHAR(10) NOT NULL, -- YYYY-MM-DD
-        hora VARCHAR(10) NOT NULL, -- HH:MM
+        data VARCHAR(10) NOT NULL,
+        hora VARCHAR(10) NOT NULL,
         status VARCHAR(50) DEFAULT 'agendado' CHECK(status IN ('agendado', 'confirmado', 'cancelado', 'falta', 'compareceu')),
         observacoes TEXT,
         encaminhado_por INT DEFAULT NULL,
         cancelado_em VARCHAR(50) DEFAULT NULL,
-        paciente_avisado TINYINT DEFAULT 0, -- 0 = False, 1 = True
+        paciente_avisado TINYINT DEFAULT 0,
         FOREIGN KEY(paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE,
         FOREIGN KEY(voluntario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
         FOREIGN KEY(encaminhado_por) REFERENCES usuarios(id) ON DELETE SET NULL
       )
     `);
 
-    // 6. ListaEspera Table
     await dbRun(`
       CREATE TABLE IF NOT EXISTS lista_espera (
         id INT AUTO_INCREMENT PRIMARY KEY,
         paciente_id INT UNIQUE NOT NULL,
         observacoes TEXT,
-        data_solicitacao VARCHAR(20) NOT NULL, -- YYYY-MM-DD HH:MM:SS
+        data_solicitacao VARCHAR(20) NOT NULL,
         FOREIGN KEY(paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
       )
     `);
 
-    // 7. Encaminhamentos Table (Audit / History Log)
     await dbRun(`
       CREATE TABLE IF NOT EXISTS encaminhamentos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         paciente_id INT NOT NULL,
         voluntario_origem_id INT NOT NULL,
         voluntario_destino_id INT NOT NULL,
-        data_encaminhamento VARCHAR(20) NOT NULL, -- YYYY-MM-DD HH:MM:SS
+        data_encaminhamento VARCHAR(20) NOT NULL,
         observacoes TEXT,
         FOREIGN KEY(paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE,
         FOREIGN KEY(voluntario_origem_id) REFERENCES usuarios(id) ON DELETE CASCADE,
