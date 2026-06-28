@@ -101,16 +101,7 @@ export default function Login({ onLoginSuccess }) {
           </button>
         </form>
 
-        <div style={{
-          marginTop: '24px',
-          textAlign: 'center',
-          fontSize: '0.8rem',
-          color: 'var(--text-muted)'
-        }}>
-          Dica para testes:<br/>
-          Admin: <b>analia@farol.org</b> (senha: <b>farol123</b>)<br/>
-          Voluntário: <b>marly@farol.org</b> (senha: <b>marly123</b>)
-        </div>
+        {/* Test credentials box removed for production */}
       </div>
     </div>
   );
