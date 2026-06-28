@@ -14,6 +14,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'farol_agenda_secret_token_key_2026
 app.use(cors());
 app.use(express.json());
 
+// Ajuste para o deploy na Vercel (evita erro 404 devido ao strip do prefixo /api)
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api')) {
+    req.url = '/api' + req.url;
+  }
+  next();
+});
+
 // Initialize database tables
 initializeDatabase();
 
