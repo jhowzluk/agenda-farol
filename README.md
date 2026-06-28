@@ -1,6 +1,6 @@
 # Agenda Farol
 
-> Sistema web completo de agendamento de consultas e gestão de voluntários, desenvolvido para apoiar as ações sociais da Igreja Farol, apresentando controle de perfil (Admin/Voluntário), regras de negócio avançadas para limites de atendimento, fila de espera e relatórios históricos.
+> Sistema web completo de agendamento de consultas e gestão de voluntários, desenvolvido para apoiar as ações sociais da Igreja Batista Farol, apresentando controle de perfil (Admin/Voluntário), regras de negócio avançadas para limites de atendimento, fila de espera e relatórios históricos.
 
 ![Status](https://img.shields.io/badge/Status-concluído-green)
 ![Node.js](https://img.shields.io/badge/Node.js-v24-blue)
