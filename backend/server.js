@@ -138,6 +138,9 @@ app.put('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) =
     await dbRun(sql, params);
     res.json({ message: 'Usuário atualizado com sucesso.' });
   } catch (error) {
+    if (error.message.includes('UNIQUE constraint failed') || error.code === 'ER_DUP_ENTRY' || error.message.includes('Duplicate entry')) {
+      return res.status(400).json({ error: 'Este email já está em uso.' });
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -499,6 +502,7 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
 
     // Check age requirements
     const paciente = await dbGet('SELECT * FROM pacientes WHERE id = ?', [existing.paciente_id]);
+    if (!paciente) return res.status(404).json({ error: 'Paciente não encontrado.' });
     if (paciente.idade !== null && paciente.idade < 18 && (!paciente.responsavel || paciente.responsavel.trim() === '')) {
       return res.status(400).json({ error: 'Menores de 18 anos exigem um responsável registrado.' });
     }
@@ -535,6 +539,7 @@ app.put('/api/atendimentos/:id', authenticateToken, requireAdmin, async (req, re
 
       // Limits
       const volunteer = await dbGet('SELECT * FROM usuarios WHERE id = ?', [updateVolId]);
+      if (!volunteer) return res.status(404).json({ error: 'Voluntário não encontrado.' });
       if (volunteer.limite_diario !== null) {
         const dailyCount = await dbGet(
           "SELECT COUNT(*) as count FROM atendimentos WHERE voluntario_id = ? AND data = ? AND id != ? AND status != 'cancelado'",
@@ -610,7 +615,7 @@ app.post('/api/lista-espera', authenticateToken, requireAdmin, async (req, res) 
     );
     res.status(201).json({ id: result.id, paciente_id, observacoes, data_solicitacao: nowStr });
   } catch (error) {
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.message.includes('UNIQUE constraint failed') || error.code === 'ER_DUP_ENTRY' || error.message.includes('Duplicate entry')) {
       return res.status(400).json({ error: 'Este paciente já está na lista de espera.' });
     }
     res.status(500).json({ error: error.message });
