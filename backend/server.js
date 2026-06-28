@@ -117,6 +117,11 @@ app.put('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) =
     const existing = await dbGet('SELECT * FROM usuarios WHERE id = ?', [id]);
     if (!existing) return res.status(404).json({ error: 'Usuário não encontrado.' });
 
+    // Don't let admin change their own role (tipo)
+    if (parseInt(id) === parseInt(req.user.id) && tipo && tipo !== existing.tipo) {
+      return res.status(400).json({ error: 'Você não pode alterar o seu próprio nível de acesso (tipo).' });
+    }
+
     let sql = 'UPDATE usuarios SET nome = ?, email = ?, tipo = ?, limite_diario = ?, limite_mensal = ?';
     let params = [nome || existing.nome, email || existing.email, tipo || existing.tipo, limite_diario !== undefined ? limite_diario : existing.limite_diario, limite_mensal !== undefined ? limite_mensal : existing.limite_mensal];
 
@@ -141,7 +146,7 @@ app.delete('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res
   try {
     const { id } = req.params;
     // Don't let admin delete their own user
-    if (parseInt(id) === req.user.id) {
+    if (parseInt(id) === parseInt(req.user.id)) {
       return res.status(400).json({ error: 'Você não pode excluir o seu próprio usuário.' });
     }
     await dbRun('DELETE FROM usuarios WHERE id = ?', [id]);
@@ -770,3 +775,5 @@ app.post('/api/avisos/:id/avisado', authenticateToken, requireAdmin, async (req,
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
 });
+
+export default app;

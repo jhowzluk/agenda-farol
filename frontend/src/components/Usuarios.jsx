@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Usuarios({ token, toast }) {
+export default function Usuarios({ token, usuario, toast }) {
   const [users, setUsers] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
@@ -258,9 +258,11 @@ export default function Usuarios({ token, toast }) {
                     <button className="btn btn-outline btn-small" onClick={() => handleOpenEditModal(u)}>
                       ✏ Editar
                     </button>
-                    <button className="btn btn-outline btn-danger btn-small" onClick={() => handleDeleteUser(u.id)}>
-                      🗑 Excluir
-                    </button>
+                    {u.id !== usuario?.id && (
+                      <button className="btn btn-outline btn-danger btn-small" onClick={() => handleDeleteUser(u.id)}>
+                        🗑 Excluir
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -321,10 +323,16 @@ export default function Usuarios({ token, toast }) {
                     value={formData.tipo}
                     onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                     required
+                    disabled={formData.id === usuario?.id}
                   >
                     <option value="voluntario">Voluntário</option>
                     <option value="admin">Secretária (Admin)</option>
                   </select>
+                  {formData.id === usuario?.id && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                      Você não pode alterar seu próprio perfil de acesso.
+                    </span>
+                  )}
                 </div>
 
                 {formData.tipo === 'voluntario' && (

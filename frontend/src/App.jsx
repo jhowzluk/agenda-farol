@@ -220,6 +220,7 @@ export default function App() {
           {activeTab === 'usuarios' && usuario.tipo === 'admin' && (
             <Usuarios
               token={token}
+              usuario={usuario}
               toast={showToast}
             />
           )}
