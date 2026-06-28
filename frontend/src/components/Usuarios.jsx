@@ -348,7 +348,7 @@ export default function Usuarios({ token, usuario, toast }) {
                     disabled={formData.id === usuario?.id}
                   >
                     <option value="voluntario">Voluntário</option>
-                    <option value="admin">Secretária (Admin)</option>
+                    <option value="admin">Administrador</option>
                   </select>
                   {formData.id === usuario?.id && (
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
