@@ -3,6 +3,22 @@ import { db, initializeDatabase, dbRun, dbGet, dbAll } from './database.js';
 
 const seed = async () => {
   console.log('Starting database seeding...');
+  
+  try {
+    await dbRun('SET FOREIGN_KEY_CHECKS = 0');
+    await dbRun('DROP TABLE IF EXISTS encaminhamentos');
+    await dbRun('DROP TABLE IF EXISTS lista_espera');
+    await dbRun('DROP TABLE IF EXISTS atendimentos');
+    await dbRun('DROP TABLE IF EXISTS bloqueios_horario');
+    await dbRun('DROP TABLE IF EXISTS disponibilidades');
+    await dbRun('DROP TABLE IF EXISTS pacientes');
+    await dbRun('DROP TABLE IF EXISTS usuarios');
+    await dbRun('SET FOREIGN_KEY_CHECKS = 1');
+    console.log('Dropped existing tables to apply schema updates.');
+  } catch (e) {
+    console.error('Error dropping tables:', e);
+  }
+
   await initializeDatabase();
 
   try {
@@ -28,27 +44,27 @@ const seed = async () => {
 
     // Insert Admin
     const adminResult = await dbRun(
-      'INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-      ['Anália (Secretária)', 'analia@farol.org', hashAnalia, 'admin']
+      'INSERT INTO usuarios (nome, email, senha, tipo, especialidade) VALUES (?, ?, ?, ?, ?)',
+      ['Anália', 'analia@farol.org', hashAnalia, 'admin', 'Secretária']
     );
     const analiaId = adminResult.id;
 
     // Insert Volunteers
     const marlyResult = await dbRun(
-      'INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-      ['Marly Inácio (Psicóloga)', 'marly@farol.org', hashMarly, 'voluntario']
+      'INSERT INTO usuarios (nome, email, senha, tipo, especialidade) VALUES (?, ?, ?, ?, ?)',
+      ['Marly Inácio', 'marly@farol.org', hashMarly, 'voluntario', 'Psicóloga']
     );
     const marlyId = marlyResult.id;
 
     const laercioResult = await dbRun(
-      'INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-      ['Laércio Fillus Pires (Terapeuta)', 'laercio@farol.org', hashLaercio, 'voluntario']
+      'INSERT INTO usuarios (nome, email, senha, tipo, especialidade) VALUES (?, ?, ?, ?, ?)',
+      ['Laércio Fillus Pires', 'laercio@farol.org', hashLaercio, 'voluntario', 'Terapeuta']
     );
     const laercioId = laercioResult.id;
 
     const thaisResult = await dbRun(
-      'INSERT INTO usuarios (nome, email, senha, tipo, limite_mensal) VALUES (?, ?, ?, ?, ?)',
-      ['Thaís (Psiquiatra)', 'thais@farol.org', hashThais, 'voluntario', 2] // limit of 2 per month
+      'INSERT INTO usuarios (nome, email, senha, tipo, especialidade, limite_mensal) VALUES (?, ?, ?, ?, ?, ?)',
+      ['Thaís', 'thais@farol.org', hashThais, 'voluntario', 'Psiquiatra', 2] // limit of 2 per month
     );
     const thaisId = thaisResult.id;
 

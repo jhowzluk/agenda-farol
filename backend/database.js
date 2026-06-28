@@ -55,6 +55,7 @@ const initializeDatabase = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         senha VARCHAR(255) NOT NULL,
         tipo VARCHAR(50) NOT NULL CHECK(tipo IN ('admin', 'voluntario')),
+        especialidade VARCHAR(100) DEFAULT NULL,
         limite_diario INT DEFAULT NULL,
         limite_mensal INT DEFAULT NULL
       )

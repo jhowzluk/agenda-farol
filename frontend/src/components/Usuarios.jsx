@@ -15,6 +15,7 @@ export default function Usuarios({ token, usuario, toast }) {
     email: '',
     senha: '',
     tipo: 'voluntario',
+    especialidade: '',
     limite_diario: '',
     limite_mensal: ''
   });
@@ -50,6 +51,7 @@ export default function Usuarios({ token, usuario, toast }) {
       email: '',
       senha: '',
       tipo: 'voluntario',
+      especialidade: '',
       limite_diario: '',
       limite_mensal: ''
     });
@@ -63,6 +65,7 @@ export default function Usuarios({ token, usuario, toast }) {
       email: u.email,
       senha: '', // leave empty, only set to update password
       tipo: u.tipo,
+      especialidade: u.especialidade || '',
       limite_diario: u.limite_diario !== null ? u.limite_diario : '',
       limite_mensal: u.limite_mensal !== null ? u.limite_mensal : ''
     });
@@ -111,6 +114,7 @@ export default function Usuarios({ token, usuario, toast }) {
         nome: formData.nome,
         email: formData.email,
         tipo: formData.tipo,
+        especialidade: formData.especialidade || null,
         limite_diario: formData.limite_diario ? parseInt(formData.limite_diario) : null,
         limite_mensal: formData.limite_mensal ? parseInt(formData.limite_mensal) : null
       };
@@ -239,7 +243,14 @@ export default function Usuarios({ token, usuario, toast }) {
           <tbody>
             {users.map(u => (
               <tr key={u.id}>
-                <td style={{ fontWeight: 600 }}>{u.nome}</td>
+                <td style={{ fontWeight: 600 }}>
+                  {u.nome}
+                  {u.especialidade && (
+                    <div style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '2px' }}>
+                      {u.especialidade}
+                    </div>
+                  )}
+                </td>
                 <td>{u.email}</td>
                 <td>
                   <span className={`badge ${u.tipo === 'admin' ? 'badge-confirmado' : 'badge-agendado'}`}>
@@ -313,6 +324,17 @@ export default function Usuarios({ token, usuario, toast }) {
                     value={formData.senha}
                     onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                     required={formData.id === null}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Especialidade / Cargo (Opcional)</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Ex: Psicóloga, Terapeuta, Secretária"
+                    value={formData.especialidade}
+                    onChange={(e) => setFormData({ ...formData, especialidade: e.target.value })}
                   />
                 </div>
 

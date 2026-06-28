@@ -64,7 +64,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.json({
       token,
-      usuario: { id: user.id, nome: user.nome, email: user.email, tipo: user.tipo }
+      usuario: { id: user.id, nome: user.nome, email: user.email, tipo: user.tipo, especialidade: user.especialidade }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -78,7 +78,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 // --- USUARIOS (CRUD) ---
 app.get('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const users = await dbAll('SELECT id, nome, email, tipo, limite_diario, limite_mensal FROM usuarios');
+    const users = await dbAll('SELECT id, nome, email, tipo, especialidade, limite_diario, limite_mensal FROM usuarios');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -86,7 +86,7 @@ app.get('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 app.post('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
-  const { nome, email, senha, tipo, limite_diario, limite_mensal } = req.body;
+  const { nome, email, senha, tipo, especialidade, limite_diario, limite_mensal } = req.body;
   if (!nome || !email || !senha || !tipo) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios (nome, email, senha, tipo).' });
   }
@@ -96,11 +96,11 @@ app.post('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
     const hashedPassword = await bcryptjs.hash(senha, salt);
 
     const result = await dbRun(
-      'INSERT INTO usuarios (nome, email, senha, tipo, limite_diario, limite_mensal) VALUES (?, ?, ?, ?, ?, ?)',
-      [nome, email, hashedPassword, tipo, limite_diario || null, limite_mensal || null]
+      'INSERT INTO usuarios (nome, email, senha, tipo, especialidade, limite_diario, limite_mensal) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nome, email, hashedPassword, tipo, especialidade || null, limite_diario || null, limite_mensal || null]
     );
 
-    res.status(201).json({ id: result.id, nome, email, tipo });
+    res.status(201).json({ id: result.id, nome, email, tipo, especialidade });
   } catch (error) {
     if (error.message.includes('UNIQUE constraint failed') || error.code === 'ER_DUP_ENTRY' || error.message.includes('Duplicate entry')) {
       return res.status(400).json({ error: 'Este email já está em uso.' });
@@ -110,7 +110,7 @@ app.post('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) => {
-  const { nome, email, senha, tipo, limite_diario, limite_mensal } = req.body;
+  const { nome, email, senha, tipo, especialidade, limite_diario, limite_mensal } = req.body;
   const { id } = req.params;
 
   try {
@@ -122,8 +122,15 @@ app.put('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) =
       return res.status(400).json({ error: 'Você não pode alterar o seu próprio nível de acesso (tipo).' });
     }
 
-    let sql = 'UPDATE usuarios SET nome = ?, email = ?, tipo = ?, limite_diario = ?, limite_mensal = ?';
-    let params = [nome || existing.nome, email || existing.email, tipo || existing.tipo, limite_diario !== undefined ? limite_diario : existing.limite_diario, limite_mensal !== undefined ? limite_mensal : existing.limite_mensal];
+    let sql = 'UPDATE usuarios SET nome = ?, email = ?, tipo = ?, especialidade = ?, limite_diario = ?, limite_mensal = ?';
+    let params = [
+      nome || existing.nome,
+      email || existing.email,
+      tipo || existing.tipo,
+      especialidade !== undefined ? especialidade : existing.especialidade,
+      limite_diario !== undefined ? limite_diario : existing.limite_diario,
+      limite_mensal !== undefined ? limite_mensal : existing.limite_mensal
+    ];
 
     if (senha) {
       const salt = await bcryptjs.genSalt(10);

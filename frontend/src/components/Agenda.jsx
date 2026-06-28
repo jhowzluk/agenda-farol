@@ -495,13 +495,15 @@ export default function Agenda({ token, usuario, toast, preselectedPatient, onCl
                 onChange={(e) => setSelectedVolId(e.target.value)}
               >
                 {volunteers.map(v => (
-                  <option key={v.id} value={v.id}>{v.nome}</option>
+                  <option key={v.id} value={v.id}>
+                    {v.nome} {v.especialidade ? `(${v.especialidade})` : ''}
+                  </option>
                 ))}
               </select>
             </div>
           ) : (
             <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
-              Agenda do Voluntário: {usuario.nome}
+              Agenda do Voluntário: {usuario.nome} {usuario.especialidade ? `(${usuario.especialidade})` : ''}
             </div>
           )}
 
