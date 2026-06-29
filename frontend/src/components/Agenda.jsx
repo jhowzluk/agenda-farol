@@ -283,14 +283,21 @@ export default function Agenda({ token, usuario, toast, preselectedPatient, onCl
           return;
         }
 
+        if (quickPatientResp && quickPatientResp.trim() !== '') {
+          if (quickPatientResp.trim().length < 3 || /^\d+$/.test(quickPatientResp.trim())) {
+            toast('O nome do responsável deve ser válido (mínimo 3 caracteres e não conter apenas números).', 'error');
+            return;
+          }
+        }
+
         const ageNum = parseInt(quickPatientAge);
         if (!isNaN(ageNum)) {
           if (ageNum < 0 || ageNum > 120) {
             toast('A idade deve ser um número entre 0 e 120.', 'error');
             return;
           }
-          if (ageNum < 18 && (!quickPatientResp || quickPatientResp.trim().length < 3 || /^\d+$/.test(quickPatientResp.trim()))) {
-            toast('Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).', 'error');
+          if (ageNum < 18 && (!quickPatientResp || quickPatientResp.trim() === '')) {
+            toast('Para menores de 18 anos, é obrigatório registrar um responsável.', 'error');
             return;
           }
         }

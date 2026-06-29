@@ -88,14 +88,21 @@ export default function Pacientes({ token, toast }) {
       return;
     }
 
+    if (formData.responsavel && formData.responsavel.trim() !== '') {
+      if (formData.responsavel.trim().length < 3 || /^\d+$/.test(formData.responsavel.trim())) {
+        toast('O nome do responsável deve ser válido (mínimo 3 caracteres e não conter apenas números).', 'error');
+        return;
+      }
+    }
+
     const ageNum = parseInt(formData.idade);
     if (!isNaN(ageNum)) {
       if (ageNum < 0 || ageNum > 120) {
         toast('A idade deve ser um número entre 0 e 120.', 'error');
         return;
       }
-      if (ageNum < 18 && (!formData.responsavel || formData.responsavel.trim().length < 3 || /^\d+$/.test(formData.responsavel.trim()))) {
-        toast('Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).', 'error');
+      if (ageNum < 18 && (!formData.responsavel || formData.responsavel.trim() === '')) {
+        toast('Para menores de 18 anos, é obrigatório registrar um responsável.', 'error');
         return;
       }
     }

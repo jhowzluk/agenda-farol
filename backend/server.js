@@ -287,13 +287,20 @@ app.post('/api/pacientes', authenticateToken, requireAdmin, async (req, res) => 
     return res.status(400).json({ error: 'Telefone inválido. Deve conter pelo menos 8 dígitos.' });
   }
 
+  // Validação global do responsável se preenchido
+  if (responsavel && responsavel.trim() !== '') {
+    if (responsavel.trim().length < 3 || /^\d+$/.test(responsavel.trim())) {
+      return res.status(400).json({ error: 'O nome do responsável deve ser válido (mínimo 3 caracteres e não conter apenas números).' });
+    }
+  }
+
   const numIdade = parseInt(idade);
   if (!isNaN(numIdade)) {
     if (numIdade < 0 || numIdade > 120) {
       return res.status(400).json({ error: 'A idade deve ser um número entre 0 e 120.' });
     }
-    if (numIdade < 18 && (!responsavel || responsavel.trim().length < 3 || /^\d+$/.test(responsavel.trim()))) {
-      return res.status(400).json({ error: 'Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).' });
+    if (numIdade < 18 && (!responsavel || responsavel.trim() === '')) {
+      return res.status(400).json({ error: 'Para menores de 18 anos, é obrigatório registrar um responsável.' });
     }
   }
 
@@ -319,13 +326,20 @@ app.put('/api/pacientes/:id', authenticateToken, requireAdmin, async (req, res) 
     return res.status(400).json({ error: 'Telefone inválido. Deve conter pelo menos 8 dígitos.' });
   }
 
+  // Validação global do responsável se preenchido
+  if (responsavel && responsavel.trim() !== '') {
+    if (responsavel.trim().length < 3 || /^\d+$/.test(responsavel.trim())) {
+      return res.status(400).json({ error: 'O nome do responsável deve ser válido (mínimo 3 caracteres e não conter apenas números).' });
+    }
+  }
+
   const numIdade = parseInt(idade);
   if (!isNaN(numIdade)) {
     if (numIdade < 0 || numIdade > 120) {
       return res.status(400).json({ error: 'A idade deve ser um número entre 0 e 120.' });
     }
-    if (numIdade < 18 && (!responsavel || responsavel.trim().length < 3 || /^\d+$/.test(responsavel.trim()))) {
-      return res.status(400).json({ error: 'Para menores de 18 anos, é obrigatório registrar um responsável com nome válido (mínimo 3 caracteres).' });
+    if (numIdade < 18 && (!responsavel || responsavel.trim() === '')) {
+      return res.status(400).json({ error: 'Para menores de 18 anos, é obrigatório registrar um responsável.' });
     }
   }
 
