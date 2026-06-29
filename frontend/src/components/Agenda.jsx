@@ -57,7 +57,7 @@ export default function Agenda({ token, usuario, toast, preselectedPatient, onCl
         });
         const data = await res.json();
         if (res.ok) {
-          const vols = data.filter(u => u.tipo === 'voluntario');
+          const vols = data.filter(u => u.tipo === 'voluntario' && u.ativo !== 0);
           setVolunteers(vols);
           if (vols.length > 0) {
             setSelectedVolId(vols[0].id.toString());

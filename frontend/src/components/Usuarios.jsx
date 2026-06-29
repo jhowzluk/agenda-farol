@@ -143,17 +143,25 @@ export default function Usuarios({ token, usuario, toast }) {
     }
   };
 
-  const handleDeleteUser = async (id) => {
-    if (!window.confirm('Excluir este usuário permanentemente?')) return;
+  const handleToggleActive = async (u) => {
+    const isDeactivating = u.ativo !== 0;
+    const actionText = isDeactivating ? 'desativar' : 'ativar';
+    if (!window.confirm(`Deseja realmente ${actionText} o usuário "${u.nome}"?`)) return;
 
     try {
-      const res = await fetch(`/api/usuarios/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`/api/usuarios/${u.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ativo: isDeactivating ? 0 : 1
+        })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao excluir usuário.');
-      toast('Usuário removido do sistema.');
+      if (!res.ok) throw new Error(data.error || `Erro ao ${actionText} usuário.`);
+      toast(`Usuário ${isDeactivating ? 'desativado' : 'ativado'} com sucesso!`);
       loadUsers();
     } catch (err) {
       toast(err.message, 'error');
@@ -235,6 +243,7 @@ export default function Usuarios({ token, usuario, toast }) {
               <th>Nome</th>
               <th>E-mail</th>
               <th>Perfil</th>
+              <th>Status</th>
               <th>Limite Diário</th>
               <th>Limite Mensal</th>
               <th style={{ textAlign: 'right' }}>Ações</th>
@@ -257,6 +266,11 @@ export default function Usuarios({ token, usuario, toast }) {
                     {u.tipo === 'admin' ? 'Administrador' : 'Voluntário'}
                   </span>
                 </td>
+                <td>
+                  <span className={`badge ${u.ativo !== 0 ? 'badge-confirmado' : 'badge-falta'}`}>
+                    {u.ativo !== 0 ? 'Ativo' : 'Inativo'}
+                  </span>
+                </td>
                 <td>{u.limite_diario || 'Sem limite'}</td>
                 <td>{u.limite_mensal || 'Sem limite'}</td>
                 <td style={{ textAlign: 'right' }}>
@@ -270,8 +284,11 @@ export default function Usuarios({ token, usuario, toast }) {
                       ✏ Editar
                     </button>
                     {u.id !== usuario?.id && (
-                      <button className="btn btn-outline btn-danger btn-small" onClick={() => handleDeleteUser(u.id)}>
-                        🗑 Excluir
+                      <button
+                        className={`btn btn-small ${u.ativo !== 0 ? 'btn-outline btn-danger' : 'btn-primary'}`}
+                        onClick={() => handleToggleActive(u)}
+                      >
+                        {u.ativo !== 0 ? '🗑 Desativar' : '✔ Ativar'}
                       </button>
                     )}
                   </div>

@@ -53,7 +53,8 @@ const initializeDatabase = async () => {
         tipo VARCHAR(50) NOT NULL CHECK(tipo IN ('admin', 'voluntario')),
         especialidade VARCHAR(100) DEFAULT NULL,
         limite_diario INT DEFAULT NULL,
-        limite_mensal INT DEFAULT NULL
+        limite_mensal INT DEFAULT NULL,
+        ativo TINYINT DEFAULT 1
       )
     `);
 

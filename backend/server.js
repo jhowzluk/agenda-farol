@@ -57,6 +57,9 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Credenciais inválidas.' });
     }
+    if (user.ativo === 0) {
+      return res.status(403).json({ error: 'Este usuário está desativado. Entre em contato com a coordenação.' });
+    }
 
     const validPassword = await bcryptjs.compare(senha, user.senha);
     if (!validPassword) {
@@ -85,7 +88,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 // --- USUARIOS (CRUD) ---
 app.get('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const users = await dbAll('SELECT id, nome, email, tipo, especialidade, limite_diario, limite_mensal FROM usuarios');
+    const users = await dbAll('SELECT id, nome, email, tipo, especialidade, limite_diario, limite_mensal, ativo FROM usuarios');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -117,26 +120,29 @@ app.post('/api/usuarios', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res) => {
-  const { nome, email, senha, tipo, especialidade, limite_diario, limite_mensal } = req.body;
+  const { nome, email, senha, tipo, especialidade, limite_diario, limite_mensal, ativo } = req.body;
   const { id } = req.params;
 
   try {
     const existing = await dbGet('SELECT * FROM usuarios WHERE id = ?', [id]);
     if (!existing) return res.status(404).json({ error: 'Usuário não encontrado.' });
 
-    // Don't let admin change their own role (tipo)
     if (parseInt(id) === parseInt(req.user.id) && tipo && tipo !== existing.tipo) {
       return res.status(400).json({ error: 'Você não pode alterar o seu próprio nível de acesso (tipo).' });
     }
+    if (parseInt(id) === parseInt(req.user.id) && ativo !== undefined && parseInt(ativo) === 0) {
+      return res.status(400).json({ error: 'Você não pode desativar o seu próprio usuário.' });
+    }
 
-    let sql = 'UPDATE usuarios SET nome = ?, email = ?, tipo = ?, especialidade = ?, limite_diario = ?, limite_mensal = ?';
+    let sql = 'UPDATE usuarios SET nome = ?, email = ?, tipo = ?, especialidade = ?, limite_diario = ?, limite_mensal = ?, ativo = ?';
     let params = [
       nome || existing.nome,
       email || existing.email,
       tipo || existing.tipo,
       especialidade !== undefined ? especialidade : existing.especialidade,
       limite_diario !== undefined ? limite_diario : existing.limite_diario,
-      limite_mensal !== undefined ? limite_mensal : existing.limite_mensal
+      limite_mensal !== undefined ? limite_mensal : existing.limite_mensal,
+      ativo !== undefined ? ativo : existing.ativo
     ];
 
     if (senha) {
@@ -163,10 +169,10 @@ app.delete('/api/usuarios/:id', authenticateToken, requireAdmin, async (req, res
   try {
     const { id } = req.params;
     if (parseInt(id) === parseInt(req.user.id)) {
-      return res.status(400).json({ error: 'Você não pode excluir o seu próprio usuário.' });
+      return res.status(400).json({ error: 'Você não pode desativar o seu próprio usuário.' });
     }
-    await dbRun('DELETE FROM usuarios WHERE id = ?', [id]);
-    res.json({ message: 'Usuário removido com sucesso.' });
+    await dbRun('UPDATE usuarios SET ativo = 0 WHERE id = ?', [id]);
+    res.json({ message: 'Usuário desativado com sucesso.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
